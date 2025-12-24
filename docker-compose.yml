@@ -1,0 +1,34 @@
+services:
+  neo4j:
+    image: neo4j:4.4-community
+    hostname: neo4j
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/password
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:7474"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  app:
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      - NEO4J_URL=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=password
+      - PHX_SERVER=true
+      - SECRET_KEY_BASE=your-secret-key-base-at-least-64-chars-long-for-production-use
+    depends_on:
+      - neo4j
+
+volumes:
+  neo4j_data:
+
+

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UrbanWay — Городской транспорт</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <h1>🚌 UrbanWay</h1>
+    <nav>
+      <button class="tab active" data-tab="pathfinder">Маршрут</button>
+      <button class="tab" data-tab="stops">Остановки</button>
+      <button class="tab" data-tab="locations">Локации</button>
+      <button class="tab" data-tab="routes">Маршруты</button>
+      <button class="tab" data-tab="relationships">Связи</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- PATHFINDER TAB -->
+    <section id="pathfinder" class="tab-content active">
+      <div class="pathfinder-form">
+        <h2>Найти маршрут</h2>
+        <div class="form-row">
+          <label>Откуда:</label>
+          <select id="from-location">
+            <option value="">Загрузка...</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Куда:</label>
+          <select id="to-location">
+            <option value="">Загрузка...</option>
+          </select>
+        </div>
+        <button id="find-path" class="primary-btn">Найти маршрут</button>
+      </div>
+      <div id="path-result" class="path-result hidden"></div>
+    </section>
+
+    <!-- STOPS TAB -->
+    <section id="stops" class="tab-content">
+      <h2>Остановки</h2>
+      <div class="filters">
+        <input type="text" id="stops-filter-name" placeholder="Название...">
+        <input type="number" id="stops-filter-lat-min" placeholder="Широта от" step="0.01">
+        <input type="number" id="stops-filter-lat-max" placeholder="Широта до" step="0.01">
+        <input type="number" id="stops-filter-lon-min" placeholder="Долгота от" step="0.01">
+        <input type="number" id="stops-filter-lon-max" placeholder="Долгота до" step="0.01">
+        <select id="stops-sort">
+          <option value="">Сортировка</option>
+          <option value="name">По имени</option>
+          <option value="latitude">По широте</option>
+          <option value="longitude">По долготе</option>
+        </select>
+        <select id="stops-order">
+          <option value="asc">↑ Возр.</option>
+          <option value="desc">↓ Убыв.</option>
+        </select>
+        <input type="number" id="stops-limit" placeholder="Лимит" min="1" max="100">
+        <button id="stops-apply-filter" class="filter-btn">Применить</button>
+      </div>
+      <div class="add-form">
+        <input type="text" id="stop-name" placeholder="Название" required>
+        <input type="number" id="stop-lat" placeholder="Широта" step="0.0001" required>
+        <input type="number" id="stop-lon" placeholder="Долгота" step="0.0001" required>
+        <button id="add-stop" class="add-btn">+ Добавить</button>
+      </div>
+      <table id="stops-table">
+        <thead>
+          <tr><th>Название</th><th>Широта</th><th>Долгота</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- LOCATIONS TAB -->
+    <section id="locations" class="tab-content">
+      <h2>Локации</h2>
+      <div class="filters">
+        <input type="text" id="locations-filter-name" placeholder="Название...">
+        <select id="locations-sort">
+          <option value="">Сортировка</option>
+          <option value="name">По имени</option>
+        </select>
+        <select id="locations-order">
+          <option value="asc">↑ Возр.</option>
+          <option value="desc">↓ Убыв.</option>
+        </select>
+        <input type="number" id="locations-limit" placeholder="Лимит" min="1" max="100">
+        <button id="locations-apply-filter" class="filter-btn">Применить</button>
+      </div>
+      <div class="add-form">
+        <input type="text" id="location-name" placeholder="Название" required>
+        <button id="add-location" class="add-btn">+ Добавить</button>
+      </div>
+      <table id="locations-table">
+        <thead>
+          <tr><th>Название</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- ROUTES TAB -->
+    <section id="routes" class="tab-content">
+      <h2>Маршруты</h2>
+      <div class="filters">
+        <input type="text" id="routes-filter-name" placeholder="Название...">
+        <select id="routes-sort">
+          <option value="">Сортировка</option>
+          <option value="name">По имени</option>
+        </select>
+        <select id="routes-order">
+          <option value="asc">↑ Возр.</option>
+          <option value="desc">↓ Убыв.</option>
+        </select>
+        <input type="number" id="routes-limit" placeholder="Лимит" min="1" max="100">
+        <button id="routes-apply-filter" class="filter-btn">Применить</button>
+      </div>
+      <div class="add-form">
+        <input type="text" id="route-name" placeholder="Название (Bus 5, Tram 2...)" required>
+        <button id="add-route" class="add-btn">+ Добавить</button>
+      </div>
+      <table id="routes-table">
+        <thead>
+          <tr><th>Название</th><th>Остановки</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div id="route-stops-modal" class="modal hidden">
+        <div class="modal-content">
+          <h3>Остановки маршрута: <span id="modal-route-name"></span></h3>
+          <ul id="modal-stops-list"></ul>
+          <button class="close-modal">Закрыть</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RELATIONSHIPS TAB -->
+    <section id="relationships" class="tab-content">
+      <h2>Связи</h2>
+      <div class="sub-tabs">
+        <button class="sub-tab active" data-subtab="next">NEXT (следующая)</button>
+        <button class="sub-tab" data-subtab="transfers">TRANSFER (пересадка)</button>
+        <button class="sub-tab" data-subtab="nearby">NEARBY (рядом)</button>
+      </div>
+
+      <!-- NEXT -->
+      <div id="rel-next" class="sub-tab-content active">
+        <div class="filters">
+          <input type="text" id="next-filter-route" placeholder="Маршрут...">
+          <button id="next-apply-filter" class="filter-btn">Применить</button>
+        </div>
+        <div class="add-form">
+          <select id="next-from-stop"><option value="">От остановки...</option></select>
+          <select id="next-to-stop"><option value="">До остановки...</option></select>
+          <select id="next-route"><option value="">Маршрут...</option></select>
+          <button id="add-next" class="add-btn">+ Добавить</button>
+        </div>
+        <table id="next-table">
+          <thead>
+            <tr><th>От</th><th>До</th><th>Маршрут</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- TRANSFERS -->
+      <div id="rel-transfers" class="sub-tab-content">
+        <div class="add-form">
+          <select id="transfer-from-stop"><option value="">От остановки...</option></select>
+          <select id="transfer-to-stop"><option value="">До остановки...</option></select>
+          <button id="add-transfer" class="add-btn">+ Добавить</button>
+        </div>
+        <table id="transfers-table">
+          <thead>
+            <tr><th>От</th><th>До</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- NEARBY -->
+      <div id="rel-nearby" class="sub-tab-content">
+        <div class="filters">
+          <select id="nearby-filter-location"><option value="">Все локации</option></select>
+          <button id="nearby-apply-filter" class="filter-btn">Применить</button>
+        </div>
+        <div class="add-form">
+          <select id="nearby-location"><option value="">Локация...</option></select>
+          <select id="nearby-stop"><option value="">Остановка...</option></select>
+          <button id="add-nearby" class="add-btn">+ Добавить</button>
+        </div>
+        <table id="nearby-table">
+          <thead>
+            <tr><th>Локация</th><th>Остановка</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
+
