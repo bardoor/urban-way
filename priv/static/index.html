@@ -15,6 +15,7 @@
       <button class="tab" data-tab="locations">Локации</button>
       <button class="tab" data-tab="routes">Маршруты</button>
       <button class="tab" data-tab="relationships">Связи</button>
+      <button class="tab" data-tab="map">Карта</button>
     </nav>
   </header>
 
@@ -70,10 +71,25 @@
       </div>
       <table id="stops-table">
         <thead>
-          <tr><th>Название</th><th>Широта</th><th>Долгота</th><th></th></tr>
+          <tr><th>Название</th><th>Широта</th><th>Долгота</th><th></th><th></th></tr>
         </thead>
         <tbody></tbody>
       </table>
+
+      <!-- Edit Stop Modal -->
+      <div id="edit-stop-modal" class="modal hidden">
+        <div class="modal-content">
+          <h3>Редактировать остановку</h3>
+          <input type="hidden" id="edit-stop-id">
+          <div class="form-row"><label>Название:</label><input type="text" id="edit-stop-name"></div>
+          <div class="form-row"><label>Широта:</label><input type="number" id="edit-stop-lat" step="0.0001"></div>
+          <div class="form-row"><label>Долгота:</label><input type="number" id="edit-stop-lon" step="0.0001"></div>
+          <div class="modal-actions">
+            <button id="save-stop" class="primary-btn">Сохранить</button>
+            <button class="close-modal">Отмена</button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- LOCATIONS TAB -->
@@ -98,10 +114,23 @@
       </div>
       <table id="locations-table">
         <thead>
-          <tr><th>Название</th><th></th></tr>
+          <tr><th>Название</th><th></th><th></th></tr>
         </thead>
         <tbody></tbody>
       </table>
+
+      <!-- Edit Location Modal -->
+      <div id="edit-location-modal" class="modal hidden">
+        <div class="modal-content">
+          <h3>Редактировать локацию</h3>
+          <input type="hidden" id="edit-location-id">
+          <div class="form-row"><label>Название:</label><input type="text" id="edit-location-name"></div>
+          <div class="modal-actions">
+            <button id="save-location" class="primary-btn">Сохранить</button>
+            <button class="close-modal">Отмена</button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- ROUTES TAB -->
@@ -126,10 +155,24 @@
       </div>
       <table id="routes-table">
         <thead>
-          <tr><th>Название</th><th>Остановки</th><th></th></tr>
+          <tr><th>Название</th><th>Остановки</th><th></th><th></th></tr>
         </thead>
         <tbody></tbody>
       </table>
+
+      <!-- Edit Route Modal -->
+      <div id="edit-route-modal" class="modal hidden">
+        <div class="modal-content">
+          <h3>Редактировать маршрут</h3>
+          <input type="hidden" id="edit-route-id">
+          <div class="form-row"><label>Название:</label><input type="text" id="edit-route-name"></div>
+          <div class="modal-actions">
+            <button id="save-route" class="primary-btn">Сохранить</button>
+            <button class="close-modal">Отмена</button>
+          </div>
+        </div>
+      </div>
+
       <div id="route-stops-modal" class="modal hidden">
         <div class="modal-content">
           <h3>Остановки маршрута: <span id="modal-route-name"></span></h3>
@@ -202,8 +245,22 @@
         </table>
       </div>
     </section>
+
+    <!-- MAP TAB -->
+    <section id="map" class="tab-content">
+      <h2>Карта графа</h2>
+      <div class="map-legend">
+        <span class="legend-item"><span class="legend-dot stop"></span> Остановка</span>
+        <span class="legend-item"><span class="legend-dot location"></span> Локация</span>
+        <span class="legend-item"><span class="legend-line next"></span> NEXT</span>
+        <span class="legend-item"><span class="legend-line transfer"></span> TRANSFER</span>
+        <span class="legend-item"><span class="legend-line nearby"></span> NEARBY</span>
+      </div>
+      <div id="graph-container"></div>
+    </section>
   </main>
 
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

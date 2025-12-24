@@ -21,6 +21,12 @@ defmodule UrbanWayWeb.LocationController do
     end
   end
 
+  def update(conn, %{"id" => id} = params) do
+    with {:ok, location} <- Locations.update(id, params) do
+      json(conn, %{status: :ok, location: location})
+    end
+  end
+
   def delete(conn, %{"id" => id}) do
     with :ok <- Locations.delete(id) do
       json(conn, %{status: :ok})

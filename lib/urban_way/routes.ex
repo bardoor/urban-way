@@ -50,6 +50,13 @@ defmodule UrbanWay.Routes do
     end
   end
 
+  def update(id, attrs) do
+    "MATCH (r:Route {id: $id}) SET r.name = $name RETURN r"
+    |> Graph.query!(%{id: id, name: attrs["name"]})
+    |> Result.extract_one("r")
+    |> map_node_result()
+  end
+
   def delete(id) do
     "MATCH (r:Route {id: $id}) DETACH DELETE r RETURN count(r) as cnt"
     |> Graph.query!(%{id: id})

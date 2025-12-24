@@ -25,6 +25,12 @@ defmodule UrbanWayWeb.RouteController do
     end
   end
 
+  def update(conn, %{"id" => id} = params) do
+    with {:ok, route} <- Routes.update(id, params) do
+      json(conn, %{status: :ok, route: route})
+    end
+  end
+
   def delete(conn, %{"id" => id}) do
     with :ok <- Routes.delete(id) do
       json(conn, %{status: :ok})

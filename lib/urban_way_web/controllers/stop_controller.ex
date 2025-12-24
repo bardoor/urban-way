@@ -21,6 +21,12 @@ defmodule UrbanWayWeb.StopController do
     end
   end
 
+  def update(conn, %{"id" => id} = params) do
+    with {:ok, stop} <- Stops.update(id, params) do
+      json(conn, %{status: :ok, stop: stop})
+    end
+  end
+
   def delete(conn, %{"id" => id}) do
     with :ok <- Stops.delete(id) do
       json(conn, %{status: :ok})

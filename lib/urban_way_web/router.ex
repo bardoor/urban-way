@@ -18,11 +18,12 @@ defmodule UrbanWayWeb.Router do
   scope "/api", UrbanWayWeb do
     pipe_through :api
 
-    resources "/locations", LocationController, only: [:index, :show, :create, :delete]
-    resources "/stops", StopController, only: [:index, :show, :create, :delete]
-    resources "/routes", RouteController, only: [:index, :show, :create, :delete]
+    resources "/locations", LocationController, only: [:index, :show, :create, :update, :delete]
+    resources "/stops", StopController, only: [:index, :show, :create, :update, :delete]
+    resources "/routes", RouteController, only: [:index, :show, :create, :update, :delete]
     get "/routes/:name/stops", RouteController, :stops
 
+    get "/graph", GraphController, :index
     get "/pathfinder", PathfinderController, :find
 
     get "/relationships/next", RelationshipController, :index_next

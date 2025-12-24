@@ -43,6 +43,13 @@ defmodule UrbanWay.Stops do
     end
   end
 
+  def update(id, attrs) do
+    "MATCH (s:Stop {id: $id}) SET s.name = $name, s.latitude = $lat, s.longitude = $lon RETURN s"
+    |> Graph.query!(%{id: id, name: attrs["name"], lat: attrs["latitude"], lon: attrs["longitude"]})
+    |> Result.extract_one("s")
+    |> map_node_result()
+  end
+
   def delete(id) do
     "MATCH (s:Stop {id: $id}) DETACH DELETE s RETURN count(s) as cnt"
     |> Graph.query!(%{id: id})

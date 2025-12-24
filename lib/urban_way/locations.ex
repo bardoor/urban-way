@@ -35,6 +35,13 @@ defmodule UrbanWay.Locations do
     end
   end
 
+  def update(id, attrs) do
+    "MATCH (l:Location {id: $id}) SET l.name = $name RETURN l"
+    |> Graph.query!(%{id: id, name: attrs["name"]})
+    |> Result.extract_one("l")
+    |> map_node_result()
+  end
+
   def delete(id) do
     "MATCH (l:Location {id: $id}) DETACH DELETE l RETURN count(l) as cnt"
     |> Graph.query!(%{id: id})

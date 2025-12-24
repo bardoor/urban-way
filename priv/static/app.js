@@ -48,6 +48,7 @@ function loadTabData(tabName) {
     case 'locations': loadLocations(); break;
     case 'routes': loadRoutes(); break;
     case 'relationships': loadRelationshipData('next'); break;
+    case 'map': loadGraph(); break;
   }
 }
 
@@ -194,7 +195,7 @@ async function loadStops() {
   
   const tbody = $('#stops-table tbody');
   if (stops.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Нет остановок</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Нет остановок</td></tr>';
     return;
   }
   
@@ -203,10 +204,14 @@ async function loadStops() {
       <td>${s.name}</td>
       <td>${s.latitude}</td>
       <td>${s.longitude}</td>
+      <td><button class="edit-btn" data-id="${s.id}" data-name="${s.name}" data-lat="${s.latitude}" data-lon="${s.longitude}">✏️</button></td>
       <td><button class="delete-btn" data-id="${s.id}">🗑</button></td>
     </tr>
   `).join('');
   
+  tbody.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => openEditStopModal(btn.dataset));
+  });
   tbody.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', () => deleteStop(btn.dataset.id));
   });
@@ -256,17 +261,21 @@ async function loadLocations() {
   
   const tbody = $('#locations-table tbody');
   if (locs.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="2" class="empty-state">Нет локаций</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Нет локаций</td></tr>';
     return;
   }
   
   tbody.innerHTML = locs.map(l => `
     <tr>
       <td>${l.name}</td>
+      <td><button class="edit-btn" data-id="${l.id}" data-name="${l.name}">✏️</button></td>
       <td><button class="delete-btn" data-id="${l.id}">🗑</button></td>
     </tr>
   `).join('');
   
+  tbody.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => openEditLocationModal(btn.dataset));
+  });
   tbody.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', () => deleteLocation(btn.dataset.id));
   });
@@ -311,7 +320,7 @@ async function loadRoutes() {
   
   const tbody = $('#routes-table tbody');
   if (routes.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Нет маршрутов</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Нет маршрутов</td></tr>';
     return;
   }
   
@@ -319,10 +328,14 @@ async function loadRoutes() {
     <tr>
       <td>${r.name}</td>
       <td><button class="show-btn" data-name="${r.name}">Показать</button></td>
+      <td><button class="edit-btn" data-id="${r.id}" data-name="${r.name}">✏️</button></td>
       <td><button class="delete-btn" data-id="${r.id}">🗑</button></td>
     </tr>
   `).join('');
   
+  tbody.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => openEditRouteModal(btn.dataset));
+  });
   tbody.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', () => deleteRoute(btn.dataset.id));
   });
@@ -369,15 +382,7 @@ async function showRouteStops(routeName) {
   $('#route-stops-modal').classList.remove('hidden');
 }
 
-$('.close-modal').addEventListener('click', () => {
-  $('#route-stops-modal').classList.add('hidden');
-});
-
-$('#route-stops-modal').addEventListener('click', (e) => {
-  if (e.target === $('#route-stops-modal')) {
-    $('#route-stops-modal').classList.add('hidden');
-  }
-});
+// Modal close handlers moved to EDIT MODALS section
 
 // === RELATIONSHIPS ===
 async function loadRelationshipData(type) {
@@ -613,6 +618,227 @@ async function deleteNearby(locId, stopId) {
   if (!confirm('Удалить связь?')) return;
   await api('DELETE', '/relationships/nearby', { location_id: locId, stop_id: stopId });
   loadNearby();
+}
+
+// === EDIT MODALS ===
+
+// Stop Edit
+function openEditStopModal(data) {
+  $('#edit-stop-id').value = data.id;
+  $('#edit-stop-name').value = data.name;
+  $('#edit-stop-lat').value = data.lat;
+  $('#edit-stop-lon').value = data.lon;
+  $('#edit-stop-modal').classList.remove('hidden');
+}
+
+$('#save-stop').addEventListener('click', async () => {
+  const id = $('#edit-stop-id').value;
+  const name = $('#edit-stop-name').value.trim();
+  const latitude = parseFloat($('#edit-stop-lat').value);
+  const longitude = parseFloat($('#edit-stop-lon').value);
+  
+  if (!name || isNaN(latitude) || isNaN(longitude)) {
+    alert('Заполните все поля корректно');
+    return;
+  }
+  
+  await api('PUT', `/stops/${id}`, { name, latitude, longitude });
+  $('#edit-stop-modal').classList.add('hidden');
+  cachedStops = [];
+  loadStops();
+});
+
+// Location Edit
+function openEditLocationModal(data) {
+  $('#edit-location-id').value = data.id;
+  $('#edit-location-name').value = data.name;
+  $('#edit-location-modal').classList.remove('hidden');
+}
+
+$('#save-location').addEventListener('click', async () => {
+  const id = $('#edit-location-id').value;
+  const name = $('#edit-location-name').value.trim();
+  
+  if (!name) {
+    alert('Введите название');
+    return;
+  }
+  
+  await api('PUT', `/locations/${id}`, { name });
+  $('#edit-location-modal').classList.add('hidden');
+  cachedLocations = [];
+  loadLocations();
+});
+
+// Route Edit
+function openEditRouteModal(data) {
+  $('#edit-route-id').value = data.id;
+  $('#edit-route-name').value = data.name;
+  $('#edit-route-modal').classList.remove('hidden');
+}
+
+$('#save-route').addEventListener('click', async () => {
+  const id = $('#edit-route-id').value;
+  const name = $('#edit-route-name').value.trim();
+  
+  if (!name) {
+    alert('Введите название');
+    return;
+  }
+  
+  await api('PUT', `/routes/${id}`, { name });
+  $('#edit-route-modal').classList.add('hidden');
+  cachedRoutes = [];
+  loadRoutes();
+});
+
+// Close modals
+$$('.close-modal').forEach(btn => {
+  btn.addEventListener('click', () => {
+    $$('.modal').forEach(m => m.classList.add('hidden'));
+  });
+});
+
+$$('.modal').forEach(modal => {
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.classList.add('hidden');
+    }
+  });
+});
+
+// === GRAPH VISUALIZATION ===
+let graphNetwork = null;
+
+async function loadGraph() {
+  const data = await api('GET', '/graph');
+  if (!data.graph) return;
+  
+  const graph = data.graph;
+  const nodes = [];
+  const edges = [];
+  
+  // Add stop nodes (blue)
+  graph.stops.forEach(s => {
+    nodes.push({
+      id: 's_' + s.id,
+      label: s.name,
+      color: { background: '#4a9eff', border: '#2a7edf' },
+      shape: 'dot',
+      size: 20,
+      font: { color: '#e8e8e8' },
+      title: `Остановка: ${s.name}\nШирота: ${s.lat}\nДолгота: ${s.lon}`
+    });
+  });
+  
+  // Add location nodes (green)
+  graph.locations.forEach(l => {
+    nodes.push({
+      id: 'l_' + l.id,
+      label: l.name,
+      color: { background: '#00d4aa', border: '#00b490' },
+      shape: 'diamond',
+      size: 25,
+      font: { color: '#e8e8e8' },
+      title: `Локация: ${l.name}`
+    });
+  });
+  
+  // Add NEXT edges (dark gray with route label) - длинные связи
+  graph.next_edges.forEach(e => {
+    edges.push({
+      from: 's_' + e.from,
+      to: 's_' + e.to,
+      color: { color: '#666', highlight: '#888' },
+      arrows: 'to',
+      label: e.route,
+      font: { 
+        color: '#ffffff', 
+        size: 21,
+        strokeWidth: 0
+      },
+      title: `NEXT: ${e.route}`,
+      length: 250
+    });
+  });
+  
+  // Add TRANSFER edges (orange dashed) - средние связи
+  graph.transfer_edges.forEach(e => {
+    edges.push({
+      from: 's_' + e.from,
+      to: 's_' + e.to,
+      color: { color: '#ffa502', highlight: '#ffb833' },
+      arrows: 'to',
+      dashes: true,
+      width: 2,
+      title: 'TRANSFER',
+      length: 200
+    });
+  });
+  
+  // Add NEARBY edges (thin gray) - короткие связи, локация рядом с остановкой
+  graph.nearby_edges.forEach(e => {
+    edges.push({
+      from: 'l_' + e.location,
+      to: 's_' + e.stop,
+      color: { color: '#555', highlight: '#777' },
+      width: 1,
+      dashes: [2, 4],
+      title: 'NEARBY',
+      length: 60
+    });
+  });
+  
+  const container = document.getElementById('graph-container');
+  const visData = {
+    nodes: new vis.DataSet(nodes),
+    edges: new vis.DataSet(edges)
+  };
+  
+  const options = {
+    nodes: {
+      font: { size: 14 },
+      fixed: { x: false, y: false }
+    },
+    edges: {
+      font: { size: 10, align: 'middle' },
+      smooth: { type: 'continuous' }
+    },
+    physics: {
+      enabled: true,
+      solver: 'barnesHut',
+      barnesHut: {
+        gravitationalConstant: -3000,
+        centralGravity: 0.1,
+        springLength: 200,
+        springConstant: 0.02,
+        damping: 0.3
+      },
+      stabilization: { 
+        enabled: true,
+        iterations: 200,
+        fit: true
+      }
+    },
+    interaction: {
+      hover: true,
+      tooltipDelay: 100,
+      dragNodes: true,
+      dragView: true,
+      zoomView: true
+    }
+  };
+  
+  if (graphNetwork) {
+    graphNetwork.destroy();
+  }
+  
+  graphNetwork = new vis.Network(container, visData, options);
+  
+  // После стабилизации отключаем физику, чтобы узлы оставались на месте
+  graphNetwork.on('stabilizationIterationsDone', () => {
+    graphNetwork.setOptions({ physics: { enabled: false } });
+  });
 }
 
 // === INIT ===
